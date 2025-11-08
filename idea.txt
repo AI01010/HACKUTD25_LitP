@@ -7,3 +7,4 @@ and the property condtions extracted from that.
 additional:
 - take video/image and send it to an AI api like gemini to extract video/img data and do same thing.
 - chatbot to get speciifcs queries/filters like: commerical property, housing, need for school/store/work/etc. to be near, etc.
+- add hardware to the cam for the video/img recording
