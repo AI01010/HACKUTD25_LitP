@@ -1,0 +1,9 @@
+im making an app to take pdf, excel, csv, word and extract data to 
+send to an ML model combine with Zillow data set from kaggle and 
+predict future price/property eval for next 5-10 yrs (or whatever is most viable for an ML model) 
+and also givnig recommendations on what needs funding based on given reports 
+and the property condtions extracted from that.
+
+additional:
+- take video/image and send it to an AI api like gemini to extract video/img data and do same thing.
+- chatbot to get speciifcs queries/filters like: commerical property, housing, need for school/store/work/etc. to be near, etc.
