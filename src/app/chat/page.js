@@ -342,14 +342,10 @@ export default function ChatPage() {
       }
       // show interim transcript in input
       if (final) {
-        // send final transcript automatically
-        setInput("");
-        addMessage("user", final.trim());
         try {
           recog.stop();
         } catch (e) {}
         setRecognizing(false);
-        simulateBotResponse(final.trim());
       } else {
         setInput(() => interim);
       }

@@ -40,7 +40,7 @@ export default function Navbar() {
                   <Building2 className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white-900">
+                  <h1 className="text-2xl font-bold text-white">
                     CBRE Intelligence Hub
                   </h1>
                   <p className="text-sm text-gray-300">

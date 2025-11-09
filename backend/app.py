@@ -42,7 +42,7 @@ def send_message():
 
         print(f"combined file text is is: {fileText}")
 
-        reply = "Understood."
+        reply = "The multitude tightens its hold."
 
         return jsonify({"ok": True, "reply": reply}), 200
     except Exception as e:
