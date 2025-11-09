@@ -83,7 +83,6 @@ export default function Home() {
           Welcome to FIN ESTATE
         </div>
 
-
         <div className="w-full max-w-lg rounded-md border bg-white dark:bg-[#0b0b0b] p-8 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Upload a PDF</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -95,18 +94,23 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-white disabled:opacity-60"
+                className="rounded bg-green-600 hover:bg-green-700 cursor-pointer px-4 py-2 text-white disabled:opacity-60"
                 disabled={uploading}
               >
                 {uploading ? "Uploading..." : "Upload PDF"}
               </button>
-              {message && <span className="text-sm text-zinc-600">{message}</span>}
+              {message && (
+                <span className="text-sm text-zinc-600">{message}</span>
+              )}
             </div>
           </form>
 
           {uploadedUrl && (
             <div className="mt-4 text-sm">
-              File saved to: <a className="text-blue-600" href={uploadedUrl}>{uploadedUrl}</a>
+              File saved to:{" "}
+              <a className="text-blue-600" href={uploadedUrl}>
+                {uploadedUrl}
+              </a>
             </div>
           )}
         </div>
@@ -116,8 +120,16 @@ export default function Home() {
           <h3 className="mb-2 text-lg font-semibold">Uploaded PDFs</h3>
           <ul className="list-disc list-inside">
             {/* Example list items - replace with actual uploaded files */}
-            <li><a className="text-blue-600" href="/uploads/sample1.pdf">sample1.pdf</a></li>
-            <li><a className="text-blue-600" href="/uploads/sample2.pdf">sample2.pdf</a></li>
+            <li>
+              <a className="text-blue-600" href="/uploads/sample1.pdf">
+                sample1.pdf
+              </a>
+            </li>
+            <li>
+              <a className="text-blue-600" href="/uploads/sample2.pdf">
+                sample2.pdf
+              </a>
+            </li>
           </ul>
         </div>
 

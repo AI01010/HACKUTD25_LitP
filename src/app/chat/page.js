@@ -49,7 +49,10 @@ export default function ChatPage() {
   const recognitionRef = useRef(null);
   const [recognizing, setRecognizing] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(
-    () => typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition) && "speechSynthesis" in window
+    () =>
+      typeof window !== "undefined" &&
+      (window.SpeechRecognition || window.webkitSpeechRecognition) &&
+      "speechSynthesis" in window
   );
   const [speakingId, setSpeakingId] = useState(null);
   const speakBufferRef = useRef("");
@@ -62,7 +65,15 @@ export default function ChatPage() {
 
   // Helper: append a message to the conversation
   function addMessage(sender, text) {
-    setMessages((m) => [...m, { id: Date.now() + Math.random(), sender, text, time: new Date().toISOString() }]);
+    setMessages((m) => [
+      ...m,
+      {
+        id: Date.now() + Math.random(),
+        sender,
+        text,
+        time: new Date().toISOString(),
+      },
+    ]);
   }
 
   // Send a message (either raw param or current input). Triggers bot reply.
@@ -86,7 +97,7 @@ export default function ChatPage() {
     setPdfUploading(true);
     setPdfMessage("");
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch("http://localhost:5000/upload", {
         method: "POST",
         headers: {
           "x-filename": encodeURIComponent(file.name),
@@ -98,6 +109,7 @@ export default function ChatPage() {
       const data = await res.json();
       if (data && data.text) {
         setPdfMessage("PDF uploaded and text extracted.");
+        console.log(data.text);
         // send extracted text into chat as user's message
         handleSend(data.text);
       } else {
@@ -121,11 +133,14 @@ export default function ChatPage() {
     let response =
       "Thanks — I looked over that. For this property I'd estimate values will trend up moderately. Check water and maintenance to improve value. Here's a short checklist: 1) Inspect plumbing; 2) Update electrical panels if older than 20 years; 3) Fix visible cracks.\nWould you like a prediction breakdown?";
     if (/rent|income/i.test(prompt)) {
-      response = "If you're considering rental income, estimate monthly rent at 0.8%–1% of property value depending on location and condition. I can run scenarios if you provide local comps.";
+      response =
+        "If you're considering rental income, estimate monthly rent at 0.8%–1% of property value depending on location and condition. I can run scenarios if you provide local comps.";
     } else if (/crack|foundation/i.test(prompt)) {
-      response = "Cracks can indicate settlement; prioritize structural inspection. Small hairline cracks are low urgency, but wide or stepping cracks need immediate attention.";
+      response =
+        "Cracks can indicate settlement; prioritize structural inspection. Small hairline cracks are low urgency, but wide or stepping cracks need immediate attention.";
     } else if (/value|price|worth/i.test(prompt)) {
-      response = "Estimated market value looks stable; predicted appreciation ~3% yearly assuming no major repairs. Improvements to water/electrical systems can raise offers by 5-8%.";
+      response =
+        "Estimated market value looks stable; predicted appreciation ~3% yearly assuming no major repairs. Improvements to water/electrical systems can raise offers by 5-8%.";
     }
 
     // Stream the response char-by-char
@@ -150,7 +165,15 @@ export default function ChatPage() {
       if (i >= response.length) {
         clearInterval(interval);
         // finalize: push bot message
-        setMessages((m) => [...m, { id: Date.now() + Math.random(), sender: "bot", text: response, time: new Date().toISOString() }]);
+        setMessages((m) => [
+          ...m,
+          {
+            id: Date.now() + Math.random(),
+            sender: "bot",
+            text: response,
+            time: new Date().toISOString(),
+          },
+        ]);
         setStreamingText("");
         setIsTyping(false);
         setIsSending(false);
@@ -201,7 +224,8 @@ export default function ChatPage() {
       u.pitch = 1;
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length) {
-        const v = voices.find((vv) => vv.lang && vv.lang.startsWith("en")) || voices[0];
+        const v =
+          voices.find((vv) => vv.lang && vv.lang.startsWith("en")) || voices[0];
         if (v) u.voice = v;
       }
       u.onend = () => {
@@ -216,7 +240,9 @@ export default function ChatPage() {
 
   // toggleMic: start/stop web speech recognition
   function toggleMic() {
-    const SpeechRecognition = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    const SpeechRecognition =
+      typeof window !== "undefined" &&
+      (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SpeechRecognition) {
       setSpeechSupported(false);
       return;
@@ -295,7 +321,10 @@ export default function ChatPage() {
 
   function clearConversation() {
     setMessages([]);
-    addMessage("bot", "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions.");
+    addMessage(
+      "bot",
+      "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions."
+    );
     setStreamingText("");
     setIsTyping(false);
   }
@@ -309,30 +338,51 @@ export default function ChatPage() {
             <Link href="/dashboard" className="text-sm text-green-600">
               Dashboard
             </Link>
-            <button onClick={clearConversation} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300">
+            <button
+              onClick={clearConversation}
+              className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300"
+            >
               New convo
             </button>
           </div>
         </div>
 
-        <div className="rounded-md border bg-white dark:bg-[#0b0b0b] p-4 shadow-sm flex-1 flex flex-col" style={{ minHeight: 420 }}>
+        <div
+          className="rounded-md border bg-white dark:bg-[#0b0b0b] p-4 shadow-sm flex-1 flex flex-col"
+          style={{ minHeight: 420 }}
+        >
           <div className="flex-1 overflow-auto pr-2 space-y-3">
             {messages.map((m) => (
-              <div key={m.id} className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={m.id}
+                className={`flex ${
+                  m.sender === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
                 <div
-                  className={`${m.sender === "user" ? "bg-green-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"} max-w-[80%] px-4 py-2 rounded-lg`}
+                  className={`${
+                    m.sender === "user"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  } max-w-[80%] px-4 py-2 rounded-lg`}
                 >
                   <div className="text-sm whitespace-pre-wrap">{m.text}</div>
 
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="text-[10px] opacity-60">{new Date(m.time).toLocaleTimeString()}</div>
+                    <div className="text-[10px] opacity-60">
+                      {new Date(m.time).toLocaleTimeString()}
+                    </div>
                     <div className="flex items-center gap-2">
                       {speechSupported ? (
                         <button
                           type="button"
                           onClick={() => {
                             try {
-                              if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis.speaking) {
+                              if (
+                                typeof window !== "undefined" &&
+                                "speechSynthesis" in window &&
+                                window.speechSynthesis.speaking
+                              ) {
                                 window.speechSynthesis.cancel();
                                 setSpeakingId(null);
                                 return;
@@ -345,7 +395,12 @@ export default function ChatPage() {
                           {speakingId === m.id ? "◼️" : "🎙️"}
                         </button>
                       ) : (
-                        <button type="button" title="TTS not supported" disabled className="text-xs px-2 py-1 rounded bg-white/5 opacity-40">
+                        <button
+                          type="button"
+                          title="TTS not supported"
+                          disabled
+                          className="text-xs px-2 py-1 rounded bg-white/5 opacity-40"
+                        >
                           🎙️
                         </button>
                       )}
@@ -369,7 +424,9 @@ export default function ChatPage() {
             {streamingText && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg max-w-[70%]">
-                  <div className="text-sm whitespace-pre-wrap">{streamingText}</div>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {streamingText}
+                  </div>
                 </div>
               </div>
             )}
@@ -377,8 +434,16 @@ export default function ChatPage() {
             <div ref={bottomRef} />
           </div>
 
-          <form className="mt-4" onSubmit={(e) => { e.preventDefault(); handleSend(); }}>
-            <label htmlFor="chat-input" className="sr-only">Type a message</label>
+          <form
+            className="mt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+          >
+            <label htmlFor="chat-input" className="sr-only">
+              Type a message
+            </label>
             <textarea
               id="chat-input"
               rows={2}
@@ -390,7 +455,9 @@ export default function ChatPage() {
             />
 
             <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm text-gray-500">Tip: include the property price or condition for better answers.</div>
+              <div className="text-sm text-gray-500">
+                Tip: include the property price or condition for better answers.
+              </div>
               <div className="flex items-center gap-2">
                 {/* PDF upload input (small control) */}
                 <label className="flex items-center gap-2 rounded px-3 py-2 border bg-white dark:bg-[#0b0b0b] text-sm cursor-pointer">
@@ -403,21 +470,47 @@ export default function ChatPage() {
                       // reset the input so same file can be selected again if needed
                       e.target.value = null;
                     }}
-                    style={{ display: 'inline-block' }}
+                    style={{ display: "inline-block" }}
                   />
-                  <span>{pdfUploading ? 'Uploading PDF...' : 'Upload PDF'}</span>
+                  <span>
+                    {pdfUploading ? "Uploading PDF..." : "Upload PDF"}
+                  </span>
                 </label>
-                {pdfMessage && <div className="text-xs text-gray-600 ml-2">{pdfMessage}</div>}
-
-                {speechSupported ? (
-                  <button type="button" onClick={toggleMic} className={`rounded px-3 py-2 border ${recognizing ? 'bg-red-500 text-white' : 'bg-white dark:bg-[#0b0b0b] text-gray-700 dark:text-gray-200'}`} title={recognizing ? 'Stop recording' : 'Record voice'}>
-                    {recognizing ? '◼️' : '🎤'}
-                  </button>
-                ) : (
-                  <button type="button" disabled title="Speech not supported" className="rounded px-3 py-2 border opacity-40">🎤</button>
+                {pdfMessage && (
+                  <div className="text-xs text-gray-600 ml-2">{pdfMessage}</div>
                 )}
 
-                <button type="submit" className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-white disabled:opacity-60" disabled={isSending}>Send</button>
+                {speechSupported ? (
+                  <button
+                    type="button"
+                    onClick={toggleMic}
+                    className={`rounded px-3 py-2 border ${
+                      recognizing
+                        ? "bg-red-500 text-white"
+                        : "bg-white dark:bg-[#0b0b0b] text-gray-700 dark:text-gray-200"
+                    }`}
+                    title={recognizing ? "Stop recording" : "Record voice"}
+                  >
+                    {recognizing ? "◼️" : "🎤"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Speech not supported"
+                    className="rounded px-3 py-2 border opacity-40"
+                  >
+                    🎤
+                  </button>
+                )}
+
+                <button
+                  type="submit"
+                  className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-white disabled:opacity-60"
+                  disabled={isSending}
+                >
+                  Send
+                </button>
               </div>
             </div>
           </form>

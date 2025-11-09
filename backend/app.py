@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import urllib.parse
+from PyPDF2 import PdfReader
 
 # ==============================
 # Flask app setup
@@ -36,18 +37,39 @@ def upload():
         # Decode URL-encoded filename
         filename = urllib.parse.unquote(encoded_filename)
 
-        # Define save path
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
-
-        # Get raw binary data (since file is not sent as form-data)
+        # 2. Get file bytes
         file_data = request.data
         if not file_data:
             return jsonify({"error": "No file data received"}), 400
-
-        # Save the file
+        
+        # 3. Save file locally (optional but useful)
+        save_path = os.path.join(UPLOAD_FOLDER, filename)
         with open(save_path, "wb") as f:
             f.write(file_data)
 
-        return jsonify({"message": f"File '{filename}' uploaded successfully!"}),
+
+        # 4. Extract text from PDF
+        pdf_text = ""
+        with open(save_path, "rb") as f:
+            reader = PdfReader(f)
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    pdf_text += text + "\n"
+
+
+        # 5. Return the extracted text as JSON
+        return jsonify({
+            "message": f"File '{filename}' uploaded and processed successfully!",
+            "text": pdf_text.strip()
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+
+# ==============================
+# Run app
+# ==============================
+if __name__ == "__main__":
+    app.run(debug=True)
