@@ -1,9 +1,16 @@
 "use client";
 
+// Dashboard page
+// This page demonstrates how `GraphBox` components are used to display
+// property metrics. In a real application these would be populated from an
+// API or derived from user's uploaded PDF data. For demo purposes we use a
+// `sample` object defined below.
+
 import Link from "next/link";
 import GraphBox from "@/components/graphBox";
 
 export default function Dashboard() {
+	// sample: placeholder data to render the dashboard UI
 	const sample = {
 		propertyValue: "$420,000",
 		futureValue: "$485,000",
@@ -22,11 +29,15 @@ export default function Dashboard() {
 				<div className="flex items-center justify-between mb-6">
 					<h1 className="text-2xl font-bold">Dashboard</h1>
 					<div className="flex gap-3">
+						{/* Links to other app areas */}
 						<Link href="/" className="text-sm text-blue-600">Home</Link>
 						<Link href="/chat" className="text-sm text-blue-600">Chat</Link>
 					</div>
 				</div>
 
+				{/* Grid of KPI cards. GraphBox is a small presentational
+					component that displays a numeric value plus a visual
+					tiny rating bar for conditions. */}
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					<GraphBox
 						title="Property Value"
@@ -46,6 +57,7 @@ export default function Dashboard() {
 						<div className="rounded-md border p-4 shadow-sm bg-white dark:bg-[#0b0b0b]">
 							<h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">Condition Ratings</h3>
 							<div className="mt-3 grid grid-cols-1 gap-3">
+								{/* Reuse GraphBox to render several condition ratings */}
 								<GraphBox title="Water" value={`${sample.conditions.water}/5`} rating={sample.conditions.water} />
 								<GraphBox title="Electric" value={`${sample.conditions.electric}/5`} rating={sample.conditions.electric} />
 								<GraphBox title="Maintenance" value={`${sample.conditions.maintenance}/5`} rating={sample.conditions.maintenance} />
