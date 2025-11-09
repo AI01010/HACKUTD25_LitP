@@ -2,10 +2,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import requests
-from catboost import CatBoostRegressor, Pool
+from catboost import CatBoostRegressor
 from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
 from peft import PeftModel
 import pandas as pd
+
 
 systemPrompt = '''
 You are a real estate data extraction specialist. You take input from users and determine what metrics or features they are looking for in a given data set and prompt them for the data if there is none provided.
@@ -41,7 +42,7 @@ If the user seems to want to predict features or generate predictions based on t
 '''
 
 loaded_model = CatBoostRegressor()
-loaded_model.load_model("catboost_model.cbm")
+loaded_model.load_model("backend/models/catboost_price_model.cbm")
 
 # ==============================
 # Flask app setup
@@ -95,9 +96,11 @@ def getResponse(message):
     except requests.HTTPError as e:
         print("HTTP error:", e, resp.text)
         botMessage = "Upstream error."
+        return botMessage
     except Exception as e:
         print("Unexpected error:", e)
         botMessage = "Server error."
+        return botMessage
     
     modelData["messages"].append({"role": "assistant", "content": botMessage})
     # Keep last 10 messages
@@ -128,11 +131,12 @@ base_model_name = "google/flan-t5-base"  # or the model you used for LoRA fine-t
 base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_name)
 
 # Load the LoRA adapters
-model = PeftModel.from_pretrained(base_model, "./flan-t5-lora-finetuned")
+model = PeftModel.from_pretrained(base_model, "backend/models/flan-t5-lora-finetuned")
 # Load the tokenizer
-tokenizer = AutoTokenizer.from_pretrained("./flan-t5-lora-finetuned")
+tokenizer = AutoTokenizer.from_pretrained("backend/models/flan-t5-lora-finetuned")
 
 def useWithModel(evaluatingString, isPredicting):
+    global loaded_model
     try:
         # Split into rows
         rows = evaluatingString.strip().split("\n")
@@ -163,21 +167,16 @@ def useWithModel(evaluatingString, isPredicting):
         X = df.drop(columns=['price'])  # if price is the target
 
         if(not isPredicting):
-            model2 = CatBoostRegressor(iterations=50, learning_rate=0.1)
+            model2 = CatBoostRegressor(iterations=50, learning_rate=0.1, nan_mode='Min')
             model2.fit(X, y, init_model=loaded_model)
             loaded_model = model2
+            return None
 
 
         
         pred = loaded_model.predict(X)
 
-        MSE = (y - pred) ** 2
-
-        print(f"MSE was {MSE}")
-
-        return MSE
-
-
+        return pred
 
     except Exception as e:
         print(f"Error tring to parse; result was {evaluatingString}, exception was {e}")
@@ -201,14 +200,14 @@ def addFeatures(textFile, isPredicting):
     finalList = [textFile]
     numTokens = len(textFile) / 4
     if(numTokens > 900):
-        numChunks = len(textFile) / (4 * 900)
+        numChunks = int(len(textFile) / (4 * 900))
         createdChunks = split_string_n_ways(textFile, numChunks)
         if(len(createdChunks[-1]) < (4 * 900) / 5):
             createdChunks[-2] += createdChunks[-1]
             createdChunks.pop()
         for i in range(0, len(createdChunks), 1):
             createdChunks[i] = chunkSummarize(createdChunks[i])
-        pooledChunk = [createdChunks[i] + createdChunks[i+1] for i in range(0, len(createdChunks), 2)] 
+        pooledChunk = [createdChunks[i] + createdChunks[i+1] for i in range(0, len(createdChunks)-1, 2)]
 
         finalList = pooledChunk
 
@@ -216,12 +215,17 @@ def addFeatures(textFile, isPredicting):
         if(numTokens > 1800):
             for i in range(0, len(createdChunks), 1):
                 createdChunks[i] = chunkSummarize(createdChunks[i])
-            pooledChunk = [createdChunks[i] + createdChunks[i+1] for i in range(0, len(createdChunks), 2)] 
+            pooledChunk = [createdChunks[i] + createdChunks[i+1] for i in range(0, len(createdChunks)-1, 2)]
             finalList = pooledChunk
 
-    for string in finalList:
-        return getFeatures(string, isPredicting)
-            
+    predictedArr = []
+    results = []
+    numPoints = 0
+    for i, string in enumerate(finalList):
+        results.append(getFeatures(string, isPredicting))
+        if results[i] is not None and results[i] != "FAILURE":
+            predictedArr.append(results[i])
+    return predictedArr            
 @app.route("/send_message", methods=["POST"])
 def send_message():
     try:
@@ -232,21 +236,20 @@ def send_message():
         message = (data.get("message", "") or "").strip()
         reply = getResponse(message)
         if "|PREDICTING|" in reply:
-            MSE = addFeatures(message, True)
-            message = f"\nSYSTEM: MSE of the prediction was {MSE}"
+            print("We...predicting???")
+            predictions = addFeatures(message, True)
+            message = f"\nSYSTEM: The predictions for what was passed in was {[float(p) if hasattr(p, '__len__') else p for pred_array in predictions for p in (pred_array if hasattr(pred_array, '__iter__') else [pred_array])]}"
             reply = getResponse(message)
 
         files = data.get("files", []) or []
 
         # Combine message and file texts for simple reply heuristics
-        fileText = ""
         for f in files:
             fname = f.get("filename") or "(unknown)"
             ftext = f.get("text") or ""
             if(ftext != ""):
+                print(f"ftext is {ftext}")
                 addFeatures(ftext, False)
-
-        print(f"combined file text is is: {fileText}")
 
 
         return jsonify({"ok": True, "reply": reply}), 200
