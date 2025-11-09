@@ -10,11 +10,30 @@ import Link from "next/link";
 import GraphBox from "@/components/graphBox";
 
 export default function Dashboard() {
-	// sample: placeholder data to render the dashboard UI
-	const sample = {
+	// Sample data for the dashboard
+	const data = {
 		propertyValue: "$420,000",
 		futureValue: "$485,000",
 		updated: "Nov 2025",
+		monthlyTrend: [
+			{ label: 'Jun', value: 400000 },
+			{ label: 'Jul', value: 405000 },
+			{ label: 'Aug', value: 410000 },
+			{ label: 'Sep', value: 415000 },
+			{ label: 'Oct', value: 420000 },
+			{ label: 'Nov', value: 485000 },
+		],
+		marketShare: [
+			{ label: 'Residential', value: 45 },
+			{ label: 'Commercial', value: 30 },
+			{ label: 'Industrial', value: 25 },
+		],
+		monthlyRevenue: [
+			{ label: 'Rent', value: 3200 },
+			{ label: 'Parking', value: 450 },
+			{ label: 'Utilities', value: 800 },
+			{ label: 'Other', value: 300 },
+		],
 		conditions: {
 			water: 4,
 			electric: 5,
@@ -24,47 +43,112 @@ export default function Dashboard() {
 	};
 
 	return (
-		<div className="min-h-screen bg-zinc-50 dark:bg-black p-8">
-			<main className="mx-auto max-w-5xl">
-				<div className="flex items-center justify-between mb-6">
-					<h1 className="text-2xl font-bold">Dashboard</h1>
-					<div className="flex gap-3">
-						{/* Links to other app areas */}
-						<Link href="/" className="text-sm text-blue-600">Home</Link>
-						<Link href="/chat" className="text-sm text-blue-600">Chat</Link>
+		<div className="min-h-screen bg-white">
+			{/* Header Section */}
+			<div className="bg-white text-[#00613C]">
+				<div className="mx-auto max-w-7xl px-6 py-3">
+					<div className="max-w-4xl">
+						<h1 className="text-4xl font-bold mb-1 leading-tight">
+							Property Analytics Dashboard
+						</h1>
+						<p className="text-xl text-green-700 mb-1 leading-relaxed">
+							Track performance metrics, market trends, and property conditions in real-time.
+						</p>
 					</div>
 				</div>
+			</div>
 
-				{/* Grid of KPI cards. GraphBox is a small presentational
-					component that displays a numeric value plus a visual
-					tiny rating bar for conditions. */}
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					<GraphBox
-						title="Property Value"
-						value={sample.propertyValue}
-						subtitle={`As of ${sample.updated}`}
-						rating={5}
-					/>
+			<main className="mx-auto max-w-7xl px-6 mt-2">
+				<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+					{/* Property Value with Line Chart */}
+					<div className="lg:col-span-2">
+						<GraphBox
+							title="Property Value Trend"
+							value={data.propertyValue}
+							subtitle={`Updated ${data.updated} • Projected growth: +15.5%`}
+							type="line"
+							data={data.monthlyTrend}
+						/>
+					</div>
 
-					<GraphBox
-						title="Predicted Future Value"
-						value={sample.futureValue}
-						subtitle="1-year prediction"
-						rating={4}
-					/>
+					{/* Future Value Prediction */}
+					<div>
+						<GraphBox
+							title="Predicted Value"
+							value={data.futureValue}
+							subtitle="1-year forecast"
+							type="metric"
+							trend="up"
+						/>
+					</div>
 
-					<div className="col-span-1 lg:col-span-1">
-						<div className="rounded-md border p-4 shadow-sm bg-white dark:bg-[#0b0b0b]">
-							<h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">Condition Ratings</h3>
-							<div className="mt-3 grid grid-cols-1 gap-3">
-								{/* Reuse GraphBox to render several condition ratings */}
-								<GraphBox title="Water" value={`${sample.conditions.water}/5`} rating={sample.conditions.water} />
-								<GraphBox title="Electric" value={`${sample.conditions.electric}/5`} rating={sample.conditions.electric} />
-								<GraphBox title="Maintenance" value={`${sample.conditions.maintenance}/5`} rating={sample.conditions.maintenance} />
-								<GraphBox title="Cracks" value={`${sample.conditions.cracks}/5`} rating={sample.conditions.cracks} />
+					{/* Market Distribution Pie Chart */}
+					<div>
+						<GraphBox
+							title="Market Distribution"
+							value="Property Mix"
+							type="pie"
+							data={data.marketShare}
+						/>
+					</div>
+
+					{/* Monthly Revenue Breakdown */}
+					<div>
+						<GraphBox
+							title="Monthly Revenue"
+							value="$4,750"
+							type="bar"
+							data={data.monthlyRevenue}
+						/>
+					</div>
+
+					{/* Condition Ratings */}
+					<div>
+						<div className="rounded-2xl border-2 border-gray-200 p-6 shadow-sm bg-white">
+							<h3 className="text-base font-medium text-gray-900 mb-4">Property Conditions</h3>
+							<div className="space-y-4">
+								<GraphBox 
+									title="Water Systems" 
+									value={`${data.conditions.water}/5`} 
+									type="rating"
+									rating={data.conditions.water} 
+								/>
+								<GraphBox 
+									title="Electrical Systems" 
+									value={`${data.conditions.electric}/5`} 
+									type="rating"
+									rating={data.conditions.electric} 
+								/>
+								<GraphBox 
+									title="Maintenance" 
+									value={`${data.conditions.maintenance}/5`} 
+									type="rating"
+									rating={data.conditions.maintenance} 
+								/>
+								<GraphBox 
+									title="Structural Integrity" 
+									value={`${data.conditions.cracks}/5`} 
+									type="rating"
+									rating={data.conditions.cracks} 
+								/>
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<div className="flex justify-center gap-6 py-8">
+					<Link 
+						href="/chat" 
+						className="inline-flex items-center gap-2 text-[#00613C] font-semibold hover:text-[#00613C]/80 transition-colors"
+					>
+						Open Chat Assistant
+					</Link>
+					<Link 
+						href="/" 
+						className="inline-flex items-center gap-2 text-[#00613C] font-semibold hover:text-[#00613C]/80 transition-colors"
+					>
+						Return Home
+					</Link>
 				</div>
 			</main>
 		</div>

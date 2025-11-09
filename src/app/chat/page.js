@@ -350,7 +350,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-5xl px-6 py-1 flex flex-col gap-3">
+      <main className="mx-auto max-w-7xl px-6 py-1 flex flex-col gap-3">
         {/* <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
