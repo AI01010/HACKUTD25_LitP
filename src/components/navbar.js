@@ -19,7 +19,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-15">
             <Link href="/dashboard" className="hover:underline" style={{ color: "var(--foreground)" }}>
               DASHBOARD
             </Link>
