@@ -56,7 +56,7 @@ export default function Home() {
           priority
         />
 
-        <div className="w-full max-w-lg rounded-md border bg-white p-8 shadow-sm">
+        <div className="w-full max-w-lg rounded-md border bg-primary p-8 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Upload a PDF</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
@@ -67,7 +67,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                className="rounded bg-black px-4 py-2 text-white disabled:opacity-60"
+                className="rounded bg-black border border-white px-4 py-2 text-white disabled:opacity-60"
                 disabled={uploading}
               >
                 {uploading ? "Uploading..." : "Upload PDF"}
