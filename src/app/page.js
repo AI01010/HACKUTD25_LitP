@@ -24,7 +24,7 @@ export default function Home() {
 
     setUploading(true);
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch("http://localhost:5000/upload", {
         method: "POST",
         headers: {
           "x-filename": encodeURIComponent(file.name),
@@ -72,42 +72,38 @@ export default function Home() {
               >
                 {uploading ? "Uploading..." : "Upload PDF"}
               </button>
-              {message && <span className="text-sm text-zinc-600">{message}</span>}
+              {message && (
+                <span className="text-sm text-zinc-600">{message}</span>
+              )}
             </div>
           </form>
 
           {uploadedUrl && (
             <div className="mt-4 text-sm">
-              File saved to: <a className="text-blue-600" href={uploadedUrl}>{uploadedUrl}</a>
+              File saved to:{" "}
+              <a className="text-blue-600" href={uploadedUrl}>
+                {uploadedUrl}
+              </a>
             </div>
           )}
         </div>
 
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch("http://localhost:5000/");
+
+              if (!res.ok) throw new Error(`Request failed: ${res.statusText}`);
+
+              const data = await res.json();
+              console.log(data);
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        >
+          Click
+        </button>
       </main>
     </div>
   );
