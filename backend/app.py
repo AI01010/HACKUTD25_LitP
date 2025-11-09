@@ -1,9 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 import os
-import urllib.parse
-from PyPDF2 import PdfReader
 
 # ==============================
 # Flask app setup
@@ -11,7 +8,8 @@ from PyPDF2 import PdfReader
 app = Flask(__name__)
 
 # Enable CORS for React frontend (localhost:3000)
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+
 
 # Create uploads directory
 UPLOAD_FOLDER = "uploads"
@@ -22,53 +20,49 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Routes
 # ==============================
 
+
+
+
 @app.route("/")
 def home():
     return jsonify({"message": "Welcome to the HackUTD Backend!"})
 
-
-@app.route("/upload", methods=["POST"])
-def upload():
+@app.route("/send_message", methods=["POST"])
+def send_message():
     try:
-        # Support two upload styles:
-        # 1) Multipart form upload (FormData) with field name 'file' -- common
-        #    from browser clients. Use request.files['file'].
-        # 2) Raw bytes POST with an 'x-filename' header (legacy behavior).
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON body"}), 400
 
-        if "file" in request.files:
-            f = request.files["file"]
-            if f.filename == "":
-                return jsonify({"error": "empty filename"}), 400
-            filename = secure_filename(f.filename)
-            save_path = os.path.join(UPLOAD_FOLDER, filename)
-            f.save(save_path)
-            return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}"}), 200
+        message = (data.get("message", "") or "").strip()
+        files = data.get("files", []) or []
 
-        # Fallback: raw bytes with x-filename header
-        encoded_filename = request.headers.get("x-filename")
-        if not encoded_filename:
-            return jsonify({"error": "Filename header missing and no form file provided"}), 400
+        # Combine message and file texts for simple reply heuristics
+        fileText = ""
+        for f in files:
+            fname = f.get("filename") or "(unknown)"
+            ftext = f.get("text") or ""
+            fileText += f"\n\n--- FILE: {fname} ---\n{ftext}"
 
-        # Decode URL-encoded filename
-        filename = urllib.parse.unquote(encoded_filename)
-        filename = secure_filename(filename)
-        # Define save path
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
+        print(f"combined file text is is: {fileText}")
 
-        # Get raw binary data (since file is not sent as form-data)
-        file_data = request.data
-        if not file_data:
-            return jsonify({"error": "No file data received"}), 400
-        
-        # 3. Save file locally (optional but useful)
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
-        with open(save_path, "wb") as f:
-            f.write(file_data)
+        # Simple server-side reply generation (demo). Use keywords to pick a response.
+        reply = "Thanks — I looked over that. For this property I'd estimate values will trend up moderately. Check water and maintenance to improve value."
+        low = message.lower()
+        if any(k in low for k in ["rent", "income"]):
+            reply = "If you're considering rental income, estimate monthly rent at 0.8%–1% of property value depending on location and condition. I can run scenarios if you provide local comps."
+        elif any(k in low for k in ["crack", "foundation"]):
+            reply = "Cracks can indicate settlement; prioritize structural inspection. Small hairline cracks are low urgency, but wide or stepping cracks need immediate attention."
+        elif any(k in low for k in ["value", "price", "worth"]):
+            reply = "Estimated market value looks stable; predicted appreciation ~3% yearly assuming no major repairs. Improvements to water/electrical systems can raise offers by 5-8%."
 
-        return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}"}), 200
+        return jsonify({"ok": True, "reply": reply}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+
+## Remove combine_texts and any PDF extraction logic, since all text is now extracted client-side
 
 if __name__ == "__main__":
     # Run the development server. Use the Flask CLI or a production WSGI
