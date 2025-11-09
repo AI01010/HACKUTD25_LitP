@@ -17,6 +17,7 @@ bun dev
 and install pdf-parse package:
 ```bash
 npm install pdf-parse
+npm install lucide-react
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
