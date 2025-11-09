@@ -30,45 +30,39 @@ def home():
 @app.route("/upload", methods=["POST"])
 def upload():
     try:
-        # Support two upload styles:
-        # 1) Multipart form upload (FormData) with field name 'file' -- common
-        #    from browser clients. Use request.files['file'].
-        # 2) Raw bytes POST with an 'x-filename' header (legacy behavior).
-
-        if "file" in request.files:
-            f = request.files["file"]
-            if f.filename == "":
-                return jsonify({"error": "empty filename"}), 400
-            filename = secure_filename(f.filename)
-            save_path = os.path.join(UPLOAD_FOLDER, filename)
-            f.save(save_path)
-            return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}"}), 200
-
-        # Fallback: raw bytes with x-filename header
+        # 1. Get and decode filename
         encoded_filename = request.headers.get("x-filename")
         if not encoded_filename:
-            return jsonify({"error": "Filename header missing and no form file provided"}), 400
-
-        # Decode URL-encoded filename
+            return jsonify({"error": "Filename header missing"}), 400
         filename = urllib.parse.unquote(encoded_filename)
-        filename = secure_filename(filename)
-        # Define save path
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
 
-        # Get raw binary data (since file is not sent as form-data)
+        # 2. Get file bytes
         file_data = request.data
         if not file_data:
             return jsonify({"error": "No file data received"}), 400
-        
+
         # 3. Save file locally (optional but useful)
         save_path = os.path.join(UPLOAD_FOLDER, filename)
         with open(save_path, "wb") as f:
             f.write(file_data)
 
-        return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}"}), 200
+        # 4. Extract text from the saved PDF
+        pdf_text = ""
+        with open(save_path, "rb") as f:
+            reader = PdfReader(f)
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    pdf_text += text + "\n"
+
+        # 5. Return the extracted text as JSON
+        return jsonify({
+            "message": f"File '{filename}' uploaded and processed successfully!",
+            "text": pdf_text.strip()
+        }), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     # Run the development server. Use the Flask CLI or a production WSGI
