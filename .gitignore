@@ -40,5 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+<<<<<<< HEAD
+/.history
+=======
 /backend/__pycache__/
 /backend/myenv/
+>>>>>>> 0b39eec2a0baac96a635133dd227755fc90336ab
