@@ -110,6 +110,7 @@ export default function ChatPage() {
       });
       if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
       const data = await res.json();
+	  console.log(data)
       if (data && data.text) {
         setPdfMessage("PDF uploaded and text extracted.");
         console.log(data.text);

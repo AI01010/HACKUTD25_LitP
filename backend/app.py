@@ -65,7 +65,7 @@ def upload():
         with open(save_path, "wb") as f:
             f.write(file_data)
 
-        return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}"}), 200
+        return jsonify({"ok": True, "message": f"File '{filename}' uploaded successfully!", "path": f"/uploads/{filename}", "text": file_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
