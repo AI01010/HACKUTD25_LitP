@@ -3,6 +3,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 import urllib.parse
+from PyPDF2 import PdfReader
 
 # ==============================
 # Flask app setup
@@ -58,8 +59,9 @@ def upload():
         file_data = request.data
         if not file_data:
             return jsonify({"error": "No file data received"}), 400
-
-        # Save the file
+        
+        # 3. Save file locally (optional but useful)
+        save_path = os.path.join(UPLOAD_FOLDER, filename)
         with open(save_path, "wb") as f:
             f.write(file_data)
 
