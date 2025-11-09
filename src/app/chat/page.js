@@ -27,7 +27,7 @@ export default function ChatPage() {
     {
       id: 1,
       sender: "bot",
-      text: "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions.",
+      text: "Hi! I'm Estate Advisor — ask me about property value, maintenance, or predictions.",
       time: new Date().toISOString(),
     },
   ]);
@@ -328,7 +328,7 @@ export default function ChatPage() {
     setMessages([]);
     addMessage(
       "bot",
-      "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions."
+      "Hi! I'm Estate Advisor — ask me about property value, maintenance, or predictions."
     );
     setStreamingText("");
     setIsTyping(false);
@@ -341,7 +341,7 @@ export default function ChatPage() {
         <div className="mx-auto max-w-7xl px-6 py-3">
           <div className="max-w-4xl">
             <h1 className="text-4xl font-bold mb-1 leading-tight">
-              Chat with EstateAdvisor
+              Chat with Estate Advisor
             </h1>
             <p className="text-xl text-green-700 mb-1 leading-relaxed">
               Get instant answers about property values, maintenance insights, and market predictions.
@@ -432,7 +432,7 @@ export default function ChatPage() {
               <div className="flex justify-start">
                 <div className="bg-gray-50 px-6 py-4 rounded-xl shadow-sm border border-gray-100 max-w-[70%]">
                   <div className="flex items-center gap-2 text-base text-gray-700">
-                    <strong className="text-[#00613C]">EstateAdvisor</strong>
+                    <strong className="text-[#00613C]">Estate Advisor</strong>
                     <TypingDots />
                   </div>
                 </div>
@@ -469,7 +469,7 @@ export default function ChatPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               className="w-full resize-none rounded-md border px-3 py-2 text-sm bg-white dark:bg-[#fbfbfb] dark:text-gray-900"
-              placeholder="Ask EstateAdvisor about property value, repairs, or predictions. Press Enter to send, Shift+Enter for newline."
+              placeholder="Ask Estate Advisor about property value, repairs, or predictions. Press Enter to send, Shift+Enter for newline."
             />
 
             <div className="mt-3 flex items-center justify-between">
