@@ -11,9 +11,9 @@ import Link from "next/link";
 function TypingDots() {
   return (
     <span className="inline-flex items-center gap-1">
-      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-75" />
-      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-150" />
+      <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse" />
+      <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse delay-55" />
+      <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse delay-150" />
     </span>
   );
 }
@@ -31,7 +31,7 @@ export default function ChatPage() {
     {
       id: 1,
       sender: "bot",
-      text: "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions.",
+      text: "Hi! I'm Estate Advisor — ask me about property value, maintenance, or predictions.",
       time: new Date().toISOString(),
     },
   ]);
@@ -274,8 +274,8 @@ export default function ChatPage() {
       setSpeakingId(id);
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
-      u.rate = 1;
-      u.pitch = 1;
+      u.rate = 2.5;
+      u.pitch = 0.9;
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length) {
         const v =
@@ -290,6 +290,23 @@ export default function ChatPage() {
       console.error("TTS error", e);
       setSpeakingId(null);
     }
+  }
+
+  // stopSpeaking: immediately cancel any ongoing TTS and clear buffers/timers
+  function stopSpeaking() {
+    try {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (e) {
+      // ignore
+    }
+    setSpeakingId(null);
+    if (speakTimerRef.current) {
+      clearTimeout(speakTimerRef.current);
+      speakTimerRef.current = null;
+    }
+    speakBufferRef.current = "";
   }
 
   // toggleMic: start/stop web speech recognition
@@ -377,7 +394,7 @@ export default function ChatPage() {
     setMessages([]);
     addMessage(
       "bot",
-      "Hi! I'm EstateAdvisor — ask me about property value, maintenance, or predictions."
+      "Hi! I'm Estate Advisor — ask me about property value, maintenance, or predictions."
     );
     setStreamingText("");
     setIsTyping(false);
@@ -391,26 +408,39 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black p-6">
-      <main className="mx-auto max-w-3xl flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">EstateAdvisor Chat</h1>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm text-green-600">
-              Dashboard
-            </Link>
-            <button
-              onClick={clearConversation}
-              className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300"
-            >
-              New convo
-            </button>
+    <div className="min-h-screen bg-white">
+      {/* Header Section */}
+      <div className="bg-white text-[#00613C]">
+        <div className="mx-auto max-w-7xl px-6 py-3">
+          <div className="max-w-4xl">
+            <h1 className="text-4xl font-bold mb-1 leading-tight">
+              Chat with Estate Advisor
+            </h1>
+            <p className="text-xl text-green-700 mb-1 leading-relaxed">
+              Get instant answers about property values, maintenance insights, and market predictions.
+            </p>
           </div>
         </div>
+      </div>
+
+      <main className="mx-auto max-w-7xl px-6 py-1 flex flex-col gap-3">
+        {/* <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={clearConversation}
+              className="inline-flex items-center gap-2 text-[#00613C] font-semibold hover:text-[#00613C]/80 transition-colors"
+            >
+              New Conversation
+            </button>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-[#00613C] font-semibold hover:text-[#00613C]/80 transition-colors">
+              View Dashboard
+            </Link>
+          </div>
+        </div> */}
 
         <div
-          className="rounded-md border bg-white dark:bg-[#0b0b0b] p-4 shadow-sm flex-1 flex flex-col"
-          style={{ minHeight: 420 }}
+          className="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-sm flex-1 flex flex-col"
+          style={{ minHeight: 600 }}
         >
           <div className="flex-1 overflow-auto pr-2 space-y-3">
             {messages.map((m) => (
@@ -423,9 +453,9 @@ export default function ChatPage() {
                 <div
                   className={`${
                     m.sender === "user"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  } max-w-[80%] px-4 py-2 rounded-lg`}
+                      ? "bg-[#00613C] text-white"
+                      : "bg-gray-50 text-gray-900"
+                  } max-w-[80%] px-6 py-4 rounded-xl shadow-sm border border-gray-100`}
                 >
                   <div className="text-sm whitespace-pre-wrap">{m.text}</div>
 
@@ -473,9 +503,9 @@ export default function ChatPage() {
 
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg max-w-[70%]">
-                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                    <strong className="text-green-600">EstateAdvisor</strong>
+                <div className="px-6 py-4  max-w-[70%]">
+                  <div className="flex items-center gap-2 text-base text-gray-700">
+                    <strong className="text-[#00613C]">Estate Advisor</strong>
                     <TypingDots />
                   </div>
                 </div>
@@ -484,8 +514,8 @@ export default function ChatPage() {
 
             {streamingText && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg max-w-[70%]">
-                  <div className="text-sm whitespace-pre-wrap">
+                <div className="bg-gray-50 px-6 py-4 rounded-xl shadow-sm border border-gray-100 max-w-[70%]">
+                  <div className="text-gray-900 leading-relaxed whitespace-pre-wrap">
                     {streamingText}
                   </div>
                 </div>
@@ -508,8 +538,8 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full resize-none rounded-md border px-3 py-2 text-sm bg-white dark:bg-[#0b0b0b] dark:text-gray-100"
-              placeholder="Ask EstateAdvisor about property value, repairs, or predictions. Press Enter to send, Shift+Enter for newline."
+              className="w-full resize-none rounded-md border px-3 py-2 text-sm bg-white dark:bg-[#fbfbfb] dark:text-gray-900"
+              placeholder="Ask Estate Advisor about property value, repairs, or predictions. Press Enter to send, Shift+Enter for newline."
             />
 
             <div className="mt-3 flex items-center justify-between">
@@ -547,7 +577,7 @@ export default function ChatPage() {
                     className={`rounded px-3 py-2 border ${
                       recognizing
                         ? "bg-red-500 text-white"
-                        : "bg-white dark:bg-[#0b0b0b] text-gray-700 dark:text-gray-200"
+                        : "bg-white dark:bg-gray-100 hover:bg-gray-300 text-gray-700 dark:text-gray-200"
                     }`}
                     title={recognizing ? "Stop recording" : "Record voice"}
                   >

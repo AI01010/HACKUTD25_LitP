@@ -32,19 +32,32 @@ export default function Navbar() {
       }}
     >
       <header className="border-b border-gray-300 bg-[#003F2D]/90 backdrop-blur-md shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 py-4">
+        <div className="mx-auto max-w-8xl px-20 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-green-800 shadow-lg">
-                <Building2 className="h-7 w-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white-900">
-                  CBRE Intelligence Hub
-                </h1>
-                <p className="text-sm text-gray-300">
-                  AI-Powered Real Estate Insights
-                </p>
+            <div className="flex items-center justify-between w-full">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-90">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-green-800 shadow-lg">
+                  <Building2 className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white-900">
+                    CBRE Intelligence Hub
+                  </h1>
+                  <p className="text-sm text-gray-300">
+                    AI-Powered Real Estate Insights
+                  </p>
+                </div>
+              </Link>
+              <div className="flex items-center gap-6">
+                <Link href="/" className="text-white hover:text-green-300 font-medium">
+                  Home
+                </Link>
+                <Link href="/dashboard" className="text-white hover:text-green-300 font-medium">
+                  Dashboard
+                </Link>
+                <Link href="/chat" className="text-white hover:text-green-300 font-medium">
+                  Chat
+                </Link>
               </div>
             </div>
           </div>
