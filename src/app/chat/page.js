@@ -8,7 +8,7 @@ function TypingDots() {
   return (
     <span className="inline-flex items-center gap-1">
       <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse" />
-      <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse delay-75" />
+      <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse delay-55" />
       <span className="w-2 h-2 rounded-full bg-[#00613C] animate-pulse delay-150" />
     </span>
   );
@@ -78,6 +78,9 @@ export default function ChatPage() {
 
   // Send a message (either raw param or current input). Triggers bot reply.
   function handleSend(raw = null) {
+    // if the user hits send, stop any ongoing speech immediately
+    stopSpeaking();
+
     const text = (raw ?? input).trim();
     if (!text) return;
     addMessage("user", text);
@@ -225,8 +228,8 @@ export default function ChatPage() {
       setSpeakingId(id);
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
-      u.rate = 1;
-      u.pitch = 1;
+      u.rate = 2.5;
+      u.pitch = 0.9;
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length) {
         const v =
@@ -241,6 +244,23 @@ export default function ChatPage() {
       console.error("TTS error", e);
       setSpeakingId(null);
     }
+  }
+
+  // stopSpeaking: immediately cancel any ongoing TTS and clear buffers/timers
+  function stopSpeaking() {
+    try {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (e) {
+      // ignore
+    }
+    setSpeakingId(null);
+    if (speakTimerRef.current) {
+      clearTimeout(speakTimerRef.current);
+      speakTimerRef.current = null;
+    }
+    speakBufferRef.current = "";
   }
 
   // toggleMic: start/stop web speech recognition
@@ -430,7 +450,7 @@ export default function ChatPage() {
 
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-50 px-6 py-4 rounded-xl shadow-sm border border-gray-100 max-w-[70%]">
+                <div className="px-6 py-4  max-w-[70%]">
                   <div className="flex items-center gap-2 text-base text-gray-700">
                     <strong className="text-[#00613C]">Estate Advisor</strong>
                     <TypingDots />
