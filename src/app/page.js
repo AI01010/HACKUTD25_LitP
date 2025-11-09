@@ -16,94 +16,12 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [uploadedUrl, setUploadedUrl] = useState("");
-  const [dragActive, setDragActive] = useState(false);
+  // (Upload UI removed from the main page - uploads are handled in the
+  // Chat page and by the Python backend.)
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type === "application/pdf") {
-        setFile(droppedFile);
-        setMessage("");
-      } else {
-        setMessage("Only PDF files are accepted.");
-      }
-    }
-  };
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setMessage("");
-      setUploadedUrl("");
-    }
-  };
-
-  const clearFile = () => {
-    setFile(null);
-    setMessage("");
-    setUploadedUrl("");
-  };
-
-  async function handleSubmit() {
-    setMessage("");
-    setUploadedUrl("");
-
-    if (!file) {
-      setMessage("Please choose a PDF file.");
-      return;
-    }
-    if (file.type !== "application/pdf") {
-      setMessage("Only PDF files are accepted.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "x-filename": encodeURIComponent(file.name),
-          "content-type": file.type || "application/pdf",
-        },
-        body: file,
-      });
-      if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
-      const data = await res.json();
-      setUploadedUrl(data.path || "");
-      setMessage("success");
-    } catch (err) {
-      console.error(err);
-      setMessage("error");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-  };
+  // Main page no longer contains a direct PDF upload flow. Users should
+  // upload PDFs from the Chat page which routes uploads to the Python
+  // backend for parsing and storage.
 
   const features = [
     {
@@ -184,156 +102,21 @@ export default function Home() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid lg:grid-cols-3 gap-8 mb-12">
-          {/* Upload Section - 2 columns */}
+          {/* Uploads moved to the Chat page and the Python backend */}
           <div className="lg:col-span-2">
             <div className="rounded-2xl border-2 border-gray-200 bg-white p-8 shadow-lg">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Upload Your Documents
-              </h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Upload & Analyze in Chat</h3>
               <p className="text-gray-600 mb-6">
-                Upload property reports, leases, sustainability plans, or market
-                analysis documents
+                PDF uploads and document analysis are available in the Chat page.
+                Open the Chat to upload PDFs — they will be sent to the Python
+                backend for parsing and storage.
               </p>
-
-              <div>
-                {/* Drag and Drop Area */}
-                <div
-                  className={`relative rounded-xl border-2 border-dashed transition-all ${
-                    dragActive
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 bg-gray-50"
-                  } p-12 text-center`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                    id="file-upload"
-                  />
-
-                  {!file ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                        <Upload className="h-8 w-8 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-semibold text-gray-700 mb-1">
-                          Drop your PDF here, or{" "}
-                          <label
-                            htmlFor="file-upload"
-                            className="text-blue-600 hover:text-blue-700 cursor-pointer underline"
-                          >
-                            browse
-                          </label>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Supports: Property Reports, Leases, Contracts,
-                          Sustainability Documents
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between rounded-lg bg-white border border-gray-200 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                          <FileText className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium text-gray-900">
-                            {file.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={clearFile}
-                        className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                      >
-                        <X className="h-5 w-5 text-gray-500" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Upload Button */}
-                <button
-                  onClick={handleSubmit}
-                  disabled={!file || uploading}
-                  className="mt-6 w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-indigo-800"
-                >
-                  {uploading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      Analyzing Document...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <Zap className="h-5 w-5" />
-                      Analyze with AI
-                    </span>
-                  )}
-                </button>
-
-                {/* Status Messages */}
-                {message && (
-                  <div
-                    className={`mt-4 flex items-center gap-2 rounded-lg p-4 ${
-                      message === "success"
-                        ? "bg-green-50 text-green-800 border border-green-200"
-                        : "bg-red-50 text-red-800 border border-red-200"
-                    }`}
-                  >
-                    {message === "success" ? (
-                      <>
-                        <CheckCircle className="h-5 w-5" />
-                        <div>
-                          <p className="font-semibold">Analysis Complete!</p>
-                          <p className="text-sm">
-                            Your document has been processed and insights are
-                            ready.
-                          </p>
-                        </div>
-                      </>
-                    ) : message === "error" ? (
-                      <>
-                        <AlertCircle className="h-5 w-5" />
-                        <span className="font-medium">
-                          Upload failed. Please try again.
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="h-5 w-5" />
-                        <span className="font-medium">{message}</span>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {uploadedUrl && (
-                  <div className="mt-4 rounded-lg bg-blue-50 p-4 border border-blue-200">
-                    <p className="text-sm font-semibold text-blue-900 mb-2">
-                      Document Processed Successfully
-                    </p>
-                    <a
-                      href={uploadedUrl}
-                      className="text-sm text-blue-600 hover:text-blue-700 underline break-all"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {uploadedUrl}
-                    </a>
-                  </div>
-                )}
-              </div>
+              <a
+                href="/chat"
+                className="inline-block rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+              >
+                Open Chat
+              </a>
             </div>
           </div>
 

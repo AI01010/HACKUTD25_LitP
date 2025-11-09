@@ -86,13 +86,16 @@ export default function ChatPage() {
     setPdfUploading(true);
     setPdfMessage("");
     try {
-      const res = await fetch("/api/upload", {
+      // Use FormData and target the Python Flask backend. The Flask upload
+      // endpoint expects a multipart/form-data POST with a file field named
+      // 'file'. We don't set Content-Type so the browser adds the boundary.
+      const form = new FormData();
+      form.append("file", file, file.name);
+
+      const res = await fetch("http://127.0.0.1:5000/upload", {
         method: "POST",
-        headers: {
-          "x-filename": encodeURIComponent(file.name),
-          "content-type": file.type || "application/pdf",
-        },
-        body: file,
+        body: form,
+        // mode: 'cors' // uncomment if running cross-origin and backend has CORS enabled
       });
       if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
       const data = await res.json();
@@ -100,6 +103,8 @@ export default function ChatPage() {
         setPdfMessage("PDF uploaded and text extracted.");
         // send extracted text into chat as user's message
         handleSend(data.text);
+      } else if (data && data.parseError) {
+        setPdfMessage(`Uploaded but parse error: ${data.parseError}`);
       } else {
         setPdfMessage("Uploaded but no text extracted from PDF.");
       }
