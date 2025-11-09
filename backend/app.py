@@ -11,7 +11,8 @@ from PyPDF2 import PdfReader
 app = Flask(__name__)
 
 # Enable CORS for React frontend (localhost:3000)
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=["http://localhost:3000", "http://127.0.0.1:3000"])
+
 
 # Create uploads directory
 UPLOAD_FOLDER = "uploads"
@@ -21,6 +22,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # ==============================
 # Routes
 # ==============================
+
+
+uploaded_texts = []
 
 @app.route("/")
 def home():
@@ -59,6 +63,24 @@ def upload():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+
+@app.route("/combine_texts", methods=["GET"])
+def combine_texts():
+    if not uploaded_texts:
+        return jsonify({"error": "No uploaded files found."}), 400
+
+    # Combine all texts with a delimiter
+    delimiter = "\n\n--- END OF FILE ---\n\n"
+    combined = delimiter.join(
+        [f"### {entry['filename']} ###\n{entry['text']}" for entry in uploaded_texts]
+    )
+
+    return jsonify({
+        "message": "Combined all uploaded PDF texts.",
+        "combined_text": combined
+    }), 200
 
 if __name__ == "__main__":
     # Run the development server. Use the Flask CLI or a production WSGI
