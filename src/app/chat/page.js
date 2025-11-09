@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+// Point workerSrc at a CDN-hosted worker so Next.js dev server doesn't need to
+// serve the worker bundle. This avoids "fake worker" warnings and 404s.
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js";
 import Link from "next/link";
 
 // Typing animation used while the (simulated) bot composes an answer
@@ -55,6 +59,31 @@ export default function ChatPage() {
       "speechSynthesis" in window
   );
   const [speakingId, setSpeakingId] = useState(null);
+  // Extract text from PDFs client-side using pdfjs-dist
+  async function extractTextFromPdf(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        try {
+          // workerSrc is configured at module load time to avoid "fake worker" warnings
+          const typedarray = new Uint8Array(e.target.result);
+          // Use the configured worker (served from CDN) to offload parsing.
+          const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+          let text = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((item) => item.str).join(" ") + "\n";
+          }
+          resolve(text);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
   const speakBufferRef = useRef("");
   const speakTimerRef = useRef(null);
 
@@ -78,76 +107,14 @@ export default function ChatPage() {
     ]);
   }
 
-  // Send a message (either raw param or current input). Triggers bot reply.
-  function handleSend(raw = null) {
-    const text = (raw ?? input).trim();
-    addMessage("user", text);
-    setInput("");
-    simulateBotResponse(text);
-  }
-
-  // PDF upload handler: posts the file to /api/upload and, on success,
-  // uses the server-extracted text as a user message in the chat.
-  async function handlePdfFiles(files) {
-    const pdfArray = Array.from(files);
-    setPdfUploading(true);
-    setPdfMessage("");
-
-    try {
-      for (const file of pdfArray) {
-        const form = new FormData();
-        form.append("file", file, file.name);
-
-        setPdfFiles((prev) => [...prev, file.name]);
-
-        const res = await fetch("http://127.0.0.1:5000/upload", {
-          method: "POST",
-          body: form,
-        });
-
-        if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
-        const data = await res.json();
-        console.log(`✅ data: ${data}`);
-      }
-
-      setPdfMessage("All PDFs uploaded successfully!");
-    } catch (err) {
-      console.error("Upload error:", err);
-      setPdfMessage("Error uploading PDFs. See console for details.");
-    } finally {
-      setPdfUploading(false);
-    }
-  }
-
-  async function beginQuery() {
-    const res = await fetch("http://localhost:5000/combine_texts");
-    const data = await res.json();
-    console.log("Combined text:", data.combined_text);
-    console.log("Executing");
-    handleSend(data.combined_text);
-  }
-
-  // Simple simulated bot behavior: picks a canned response and streams it.
-  function simulateBotResponse(prompt) {
+  function simulateBotResponse(promptOrText, explicitResponse = null) {
     setIsSending(true);
     setIsTyping(true);
     setStreamingText("");
 
-    // simple canned response based on keywords for demo
-    let response =
-      "Thanks — I looked over that. For this property I'd estimate values will trend up moderately. Check water and maintenance to improve value. Here's a short checklist: 1) Inspect plumbing; 2) Update electrical panels if older than 20 years; 3) Fix visible cracks.\nWould you like a prediction breakdown?";
-    if (/rent|income/i.test(prompt)) {
-      response =
-        "If you're considering rental income, estimate monthly rent at 0.8%–1% of property value depending on location and condition. I can run scenarios if you provide local comps.";
-    } else if (/crack|foundation/i.test(prompt)) {
-      response =
-        "Cracks can indicate settlement; prioritize structural inspection. Small hairline cracks are low urgency, but wide or stepping cracks need immediate attention.";
-    } else if (/value|price|worth/i.test(prompt)) {
-      response =
-        "Estimated market value looks stable; predicted appreciation ~3% yearly assuming no major repairs. Improvements to water/electrical systems can raise offers by 5-8%.";
-    }
+    const response = explicitResponse;
 
-    // Stream the response char-by-char
+    // stream the response char-by-char
     let i = 0;
     const interval = setInterval(() => {
       i += 1;
@@ -192,6 +159,89 @@ export default function ChatPage() {
         }
       }
     }, 18);
+  }
+
+  // Unified send: sends chat text and/or PDFs if present, all at once.
+  async function handleUnifiedSend(e) {
+    e?.preventDefault?.();
+    setPdfMessage("");
+    let sentSomething = false;
+    let combinedTexts = [];
+    // Send chat text if not empty
+    const text = input.trim();
+    if (text) {
+      combinedTexts.push(text.replace(/\s+/g, " ").trim());
+      sentSomething = true;
+    }
+    // Convert PDFs to text if any are present and not uploading
+    let pdfTexts = [];
+    if (pdfFiles.length > 0 && !pdfUploading) {
+      pdfTexts = await handlePdfFiles(pdfFiles);
+      if (pdfTexts.length > 0) {
+        sentSomething = true;
+        // Compress whitespace in each PDF text
+        combinedTexts.push(...pdfTexts.map(t => t.replace(/\s+/g, " ").trim()));
+      }
+    }
+    // If nothing was sent, show a message
+    if (!sentSomething) {
+      setPdfMessage("Please enter a message or upload a PDF.");
+      return;
+    }
+    // Prepare payload: message and array of files (filename + extracted text)
+    const filesPayload = [];
+    if (pdfFiles.length > 0 && pdfTexts && pdfTexts.length > 0) {
+      for (let i = 0; i < pdfFiles.length; i++) {
+        filesPayload.push({ filename: pdfFiles[i].name, text: pdfTexts[i] || "" });
+      }
+    }
+
+    // Send message + files to backend /send_message
+    try {
+      const payload = { message: text || "", files: filesPayload };
+      const res = await fetch("http://127.0.0.1:5000/send_message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Send failed: ${res.statusText}`);
+      const data = await res.json();
+
+      // Append user's message to chat (if present)
+      if (text) addMessage("user", text.replace(/\s+/g, " ").trim());
+
+  // Append server reply as bot message (stream + speak)
+  const botReply = (data && (data.reply || data.text)) || "(no reply)";
+  // Use the streaming/speaking helper so TTS and typing animation work
+  simulateBotResponse(botReply, botReply);
+
+      setPdfMessage("Message sent to backend!");
+      setPdfFiles([]); // Clear selected PDFs after send
+      setInput("");
+    } catch (err) {
+      setPdfMessage("Error sending message to backend.");
+      console.error(err);
+    }
+  }
+
+  // PDF text extraction only; no upload here
+  async function handlePdfFiles(files) {
+    setPdfUploading(true);
+    setPdfMessage("");
+    let allTexts = [];
+    try {
+      for (const file of files) {
+        const text = await extractTextFromPdf(file);
+        allTexts.push(text);
+      }
+      setPdfMessage("All PDFs converted to text!");
+    } catch (err) {
+      console.error("PDF text extraction error:", err);
+      setPdfMessage("Error extracting text from PDFs. See console for details.");
+    } finally {
+      setPdfUploading(false);
+    }
+    return allTexts;
   }
 
   useEffect(() => {
@@ -319,7 +369,7 @@ export default function ChatPage() {
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleUnifiedSend();
     }
   }
 
@@ -331,6 +381,13 @@ export default function ChatPage() {
     );
     setStreamingText("");
     setIsTyping(false);
+  }
+
+  // PDF file selection handler
+  function handlePdfSelection(e) {
+    const files = Array.from(e.target.files);
+    setPdfFiles(files);
+    setPdfMessage(files.length ? `${files.length} PDF(s) selected: ${files.map(f => f.name).join(", ")}` : "");
   }
 
   return (
@@ -440,10 +497,7 @@ export default function ChatPage() {
 
           <form
             className="mt-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
+            onSubmit={handleUnifiedSend}
           >
             <label htmlFor="chat-input" className="sr-only">
               Type a message
@@ -469,18 +523,19 @@ export default function ChatPage() {
                     type="file"
                     accept="application/pdf"
                     multiple
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files && files.length > 0) handlePdfFiles(files);
-                      // reset the input so same file can be selected again if needed
-                      e.target.value = null;
-                    }}
+                    onChange={handlePdfSelection}
                     style={{ display: "inline-block" }}
                   />
                   <span>
-                    {pdfUploading ? "Uploading PDF..." : "Upload PDF"}
+                    {pdfUploading ? "Converting PDF..." : "Choose PDF(s)"}
                   </span>
                 </label>
+                {/* Show selected file names */}
+                {pdfFiles.length > 0 && (
+                  <div className="text-xs text-blue-700 ml-2">
+                    Selected: {pdfFiles.map(f => f.name).join(", ")}
+                  </div>
+                )}
                 {pdfMessage && (
                   <div className="text-xs text-gray-600 ml-2">{pdfMessage}</div>
                 )}
@@ -509,26 +564,11 @@ export default function ChatPage() {
                   </button>
                 )}
 
-                <button
-                  disabled={pdfFiles.length === 0}
-                  onClick={async () => {
-                    await beginQuery();
-                  }}
-                  className={`rounded px-4 py-2 text-white font-medium transition
-    ${
-      pdfFiles.length === 0
-        ? "bg-green-300 cursor-not-allowed opacity-80"
-        : "bg-green-600 hover:bg-green-700"
-    }
-  `}
-                >
-                  <span>Finish</span>
-                </button>
-
+                {/* Only one submit button, sends all non-empty fields at once */}
                 <button
                   type="submit"
                   className="rounded bg-green-600 hover:bg-green-700 px-4 py-2 text-white disabled:opacity-60"
-                  disabled={isSending}
+                  disabled={isSending || pdfUploading}
                 >
                   Send
                 </button>

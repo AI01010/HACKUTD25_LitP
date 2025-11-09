@@ -1,9 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 import os
-import urllib.parse
-from PyPDF2 import PdfReader
 
 # ==============================
 # Flask app setup
@@ -24,63 +21,48 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # ==============================
 
 
-uploaded_texts = []
+
 
 @app.route("/")
 def home():
     return jsonify({"message": "Welcome to the HackUTD Backend!"})
 
-
-@app.route("/upload", methods=["POST"])
-def upload():
+@app.route("/send_message", methods=["POST"])
+def send_message():
     try:
-        # 1. Get the uploaded file from FormData
-        if "file" not in request.files:
-            return jsonify({"error": "No file part in the request"}), 400
-        
-        file = request.files["file"]
-        if file.filename == "":
-            return jsonify({"error": "No file selected"}), 400
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON body"}), 400
 
-        # 2. Save file
-        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(save_path)
+        message = (data.get("message", "") or "").strip()
+        files = data.get("files", []) or []
 
-        # 3. Extract text
-        pdf_text = ""
-        with open(save_path, "rb") as f:
-            reader = PdfReader(f)
-            for page in reader.pages:
-                text = page.extract_text()
-                if text:
-                    pdf_text += text + "\n"
+        # Combine message and file texts for simple reply heuristics
+        fileText = ""
+        for f in files:
+            fname = f.get("filename") or "(unknown)"
+            ftext = f.get("text") or ""
+            fileText += f"\n\n--- FILE: {fname} ---\n{ftext}"
 
-        # 4. Return extracted text
-        return jsonify({
-            "message": f"File '{file.filename}' uploaded and processed successfully!",
-            "text": pdf_text.strip()
-        }), 200
+        print(f"combined file text is is: {fileText}")
 
+        # Simple server-side reply generation (demo). Use keywords to pick a response.
+        reply = "Thanks — I looked over that. For this property I'd estimate values will trend up moderately. Check water and maintenance to improve value."
+        low = message.lower()
+        if any(k in low for k in ["rent", "income"]):
+            reply = "If you're considering rental income, estimate monthly rent at 0.8%–1% of property value depending on location and condition. I can run scenarios if you provide local comps."
+        elif any(k in low for k in ["crack", "foundation"]):
+            reply = "Cracks can indicate settlement; prioritize structural inspection. Small hairline cracks are low urgency, but wide or stepping cracks need immediate attention."
+        elif any(k in low for k in ["value", "price", "worth"]):
+            reply = "Estimated market value looks stable; predicted appreciation ~3% yearly assuming no major repairs. Improvements to water/electrical systems can raise offers by 5-8%."
+
+        return jsonify({"ok": True, "reply": reply}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 
 
-@app.route("/combine_texts", methods=["GET"])
-def combine_texts():
-    if not uploaded_texts:
-        return jsonify({"error": "No uploaded files found."}), 400
-
-    # Combine all texts with a delimiter
-    delimiter = "\n\n--- END OF FILE ---\n\n"
-    combined = delimiter.join(
-        [f"### {entry['filename']} ###\n{entry['text']}" for entry in uploaded_texts]
-    )
-
-    return jsonify({
-        "message": "Combined all uploaded PDF texts.",
-        "combined_text": combined
-    }), 200
+## Remove combine_texts and any PDF extraction logic, since all text is now extracted client-side
 
 if __name__ == "__main__":
     # Run the development server. Use the Flask CLI or a production WSGI
