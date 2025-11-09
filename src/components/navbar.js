@@ -7,6 +7,19 @@
 // replace colors in one place.
 
 import Link from "next/link";
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  X,
+  Building2,
+  Search,
+  TrendingUp,
+  Zap,
+  Target,
+  Clock,
+} from "lucide-react";
 
 export default function Navbar() {
   return (
@@ -18,33 +31,25 @@ export default function Navbar() {
         borderBottom: "1px solid var(--secondary-theme-color)",
       }}
     >
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-8">
-            {/* Brand / home link */}
-            <Link href="/" className="font-bold text-xl" style={{ color: "var(--foreground)" }}>
-              FIN ESTATE
-            </Link>
-          </div>
-
-          {/* Center navigation links */}
-          <div className="flex items-center space-x-15">
-            <Link href="/dashboard" className="hover:underline" style={{ color: "var(--foreground)" }}>
-              DASHBOARD
-            </Link>
-            <Link href="/chat" className="hover:underline" style={{ color: "var(--foreground)" }}>
-              CHAT
-            </Link>
-          </div>
-
-          {/* Right-side links (e.g. about/contact) */}
-          <div className="flex items-center space-x-8">
-            <Link href="/about_contact" className="hover:underline" style={{ color: "var(--foreground)" }}>
-              ABOUT/CONTACT
-            </Link>
+      <header className="border-b border-blue-100 bg-white/90 backdrop-blur-md shadow-sm">
+        <div className="mx-auto max-w-7xl px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
+                <Building2 className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  CBRE Intelligence Hub
+                </h1>
+                <p className="text-sm text-gray-600">
+                  AI-Powered Real Estate Insights
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </header> 
     </nav>
   );
 }
