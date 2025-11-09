@@ -31,18 +31,18 @@ export default function Navbar() {
         borderBottom: "1px solid var(--secondary-theme-color)",
       }}
     >
-      <header className="border-b border-blue-100 bg-white/90 backdrop-blur-md shadow-sm">
+      <header className="border-b border-gray-300 bg-[#003F2D]/90 backdrop-blur-md shadow-sm">
         <div className="mx-auto max-w-7xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-green-800 shadow-lg">
                 <Building2 className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-white-900">
                   CBRE Intelligence Hub
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-300">
                   AI-Powered Real Estate Insights
                 </p>
               </div>
