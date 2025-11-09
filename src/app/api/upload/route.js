@@ -14,7 +14,9 @@ export async function POST(req) {
     // Read raw bytes from the incoming request body. Using arrayBuffer() is
     // convenient in Next.js route handlers to get the full binary content.
     const arrayBuffer = await req.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Create buffer from Uint8Array to ensure proper binary data handling
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const buffer = Buffer.from(uint8Array);
 
     // Read filename from custom header set by the client. We decode and use
     // path.basename to avoid directory traversal attacks. However, in a
@@ -57,8 +59,13 @@ export async function POST(req) {
         // Header looks like a PDF — try best-effort parsing. Wrap in try/catch
         // to capture and return any parse errors rather than allowing them to
         // surface as unhandled exceptions.
-        const parsed = await pdfParse(buffer);
-        extractedText = parsed && parsed.text ? parsed.text : "";
+        if (!buffer || buffer.length < 100) {
+          parseError = "buffer too small for valid PDF content";
+          console.warn("Upload buffer too small:", buffer ? buffer.length : 0, "bytes");
+        } else {
+          const parsed = await pdfParse(buffer);
+          extractedText = parsed && parsed.text ? parsed.text : "";
+        }
       }
     } catch (e) {
       // Capture the parse error and continue — we return the saved file path
